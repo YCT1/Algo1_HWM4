@@ -1,26 +1,149 @@
 
 #include <iostream>
+#include <string>
 using namespace std;
+
+class Data{
+
+    private:
+        char key;
+        int x,y;
+        char operationMode;
+    
+    public:
+        Data();
+        Data(const Data &p);
+        void copy(Data &p);
+        string get(){return "(" + to_string(x) + "," + to_string(y) + "," + key + ")";}
+        void set(int x, int y, char keys, char operationMode);
+
+        int getx(){return x;}
+        int gety(){return y;}
+        char getkey(){return key;}
+        char geto(){return operationMode;}
+
+        bool operator==(Data i);
+        bool operator<=(Data i);
+        bool operator>=(Data i);
+        bool operator>(Data i);
+        bool operator<(Data i);
+};
+Data::Data(){
+    this->x = 0;
+    this->y = 0;
+    this->key = 'X';
+    this->operationMode = 'z';
+}
+void Data::copy(Data &p){
+    x = p.x;
+    y = p.y;
+    key = p.key;
+    operationMode = p.operationMode;
+}
+Data::Data(const Data &p){
+    x = p.x;
+    y = p.y;
+    key = p.key;
+    operationMode = p.operationMode;
+}
+
+void Data::set(int x, int y, char key, char operationMode){
+    this->x = x;
+    this->y = y;
+    this->key = key;
+    this->operationMode = operationMode;
+}
+
+
+//Operator Overloding
+bool Data::operator==(Data i){
+    if(operationMode == 'x'){
+        return x == i.x;
+    }else if(operationMode == 'y'){
+        return y == i.y;
+    }else if(operationMode == 'z'){
+        return key == i.key;
+    }
+    cout << "error"<< endl;
+    return false;
+}
+
+bool Data::operator<=(Data i){
+    if(operationMode == 'x'){
+        return x <= i.x;
+    }else if(operationMode == 'y'){
+        return y <= i.y;
+    }else if(operationMode == 'z'){
+        return key <= i.key;
+    }
+    cout << "error"<< endl;
+    return false;
+}
+
+bool Data::operator>=(Data i){
+    if(operationMode == 'x'){
+        return x >= i.x;
+    }else if(operationMode == 'y'){
+        return y >= i.y;
+    }else if(operationMode == 'z'){
+        return key >= i.key;
+    }
+    cout << "error"<< endl;
+    return false;
+}
+
+bool Data::operator>(Data i){
+    if(operationMode == 'x'){
+        return x > i.x;
+    }else if(operationMode == 'y'){
+        return y > i.y;
+    }else if(operationMode == 'z'){
+        return key > i.key;
+    }
+    cout << "error"<< endl;
+    return false;
+}
+
+bool Data::operator<(Data i){
+    if(operationMode == 'x'){
+        return x < i.x;
+    }else if(operationMode == 'y'){
+        return y < i.y;
+    }else if(operationMode == 'z'){
+        return key < i.key;
+    }
+    cout << "error"<< endl;
+    return false;
+}
+
 class Node{
 
     private:
         char *keys; //The array of keys
+        int *x;
+        int *y;
+        Data *data;
+
         int degree; //Minumum degree
         bool leaf; // If this is true, this node is leaf and end point,
         Node **childs; // Array of pointer to this nodes children
         int size; // Size of keys 
-
     public:
         Node(); //Normal Constructor
         Node(int degree, bool isLeaf); //
 
-        void insertNonFull(char k);
+        void insertNonFull(int x,int y, char k);
+        void insertNonFull(Data x);
         void splitChild(int i, Node*y);
 
         void traverse();
         Node *search(char k);
+
+
 friend class Tree;
 };
+
+
 
 Node::Node(int degree, bool isLeaf){
 
@@ -30,6 +153,11 @@ Node::Node(int degree, bool isLeaf){
 
     //Doing nececary memory allocation
     keys = new char[2*degree-1];
+    x = new int[2*degree-1];
+    y = new int[2*degree-1];
+
+    data = new Data[2*degree-1];
+
     childs = new Node* [2*degree];
 
     //Number of keys at this point
@@ -43,9 +171,9 @@ void Node::traverse(){
         if(leaf == false){
             childs[i]->traverse();
         }
-        cout << " " << keys[i];
+        cout << data[i].get();
     }
-
+    
     if(leaf == false){
         childs[i]->traverse();
     }
@@ -70,27 +198,28 @@ Node* Node::search(char k){
 
 }
 
-void Node::insertNonFull(char k){
+//NEW
+void Node::insertNonFull(Data k){
     int i = size - 1;
 
     if(leaf == true){
-        while(i>= 0 && keys[i]>k){
-            keys[i+1] = keys[i];
+        while(i>= 0 && data[i]>k){
+            data[i+1] = data[i];
             i--;
         }
 
-        keys[i+1] = k;
+        data[i+1] = k;
         size = size + 1;
     }else{
 
-        while(i>= 0 && keys[i] > k){
+        while(i>= 0 && data[i] > k){
             i--;
         }
 
         if(childs[i+1]->size == 2*degree-1){
             splitChild(i+1,childs[i+1]);
 
-            if(keys[i+1] < k){
+            if(data[i+1] < k){
                 i++;
             }
 
@@ -100,11 +229,12 @@ void Node::insertNonFull(char k){
     }
 }
 
+
 void Node::splitChild(int i, Node *y){
     Node *z = new Node(y->degree,y->leaf);
     z->size = degree - 1; 
     for(int j = 0; j < degree-1; j++){
-        z->keys[j] = y->keys[j+degree];
+        z->data[j] = y->data[j+degree];
     }
 
     if(y->leaf == false){
@@ -123,11 +253,11 @@ void Node::splitChild(int i, Node *y){
     childs[i+1] = z;
 
     for (int j = size-1; j >= i; j--) {
-        keys[j+1] = keys[j];
+        data[j+1] = data[j];
     }
 
-    keys[i] = y->keys[degree-1]; 
 
+    data[i] = data[degree-1];
     size = size + 1;
 
 }
@@ -136,19 +266,21 @@ class Tree{
     private:
         Node *root; //root of node (pointer)
         int degree; //Minumum degree
+        char operationChar;
     
     public:
-        Tree(int degree);
+        Tree(int degree, char operation);
         void traverse();
         Node* search(char k);
-        void insert(char k);
+        void insert(int x, int y, char k);
 
 };
 
 
-Tree::Tree(int degree){
+Tree::Tree(int degree, char operation){
     root = NULL; 
     this->degree = degree;
+    operationChar = operation;
 }
 
 void Tree::traverse(){
@@ -166,7 +298,7 @@ Node* Tree::search(char k){
     return NULL;
 }
 
-void Tree::insert(char k){
+void Tree::insert(int _x, int _y, char k){
 
     //check tree is empty or not
     if(root == NULL){
@@ -174,6 +306,9 @@ void Tree::insert(char k){
         //Inisilizate the tree
         root = new Node(degree, true);
         root->keys[0] = k;
+        root->x[0] = _x;
+        root->y[0] = _y;
+        root->data[0].set(_x,_y,k,operationChar);
         root->size = 1;
         
     }else{
@@ -188,14 +323,19 @@ void Tree::insert(char k){
             s->splitChild(0,root);
 
             int i = 0;
-            if(s->keys[0] < k){
+            Data newData;
+            newData.set(_x,_y,k,operationChar);
+            if(s->data[0] < newData){
                 i++;
             }
-            s->childs[i]->insertNonFull(k);
+            newData.set(_x,_y,k,operationChar);
+            s->childs[i]->insertNonFull(newData);
 
             root = s;
         }else{
-            root->insertNonFull(k);
+            Data newData;
+            newData.set(_x,_y,k,operationChar);
+            root->insertNonFull(newData);
         }
 
     }

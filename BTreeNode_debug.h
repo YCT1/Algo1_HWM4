@@ -43,12 +43,13 @@ void Node::traverse(){
         if(leaf == false){
             childs[i]->traverse();
         }
-        cout << " " << keys[i];
+        cout << "(" << keys[i] << ")";
     }
 
     if(leaf == false){
         childs[i]->traverse();
     }
+
 
 }
 
