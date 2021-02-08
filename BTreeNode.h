@@ -18,7 +18,7 @@ class Data{
         void copy(Data &p);
         string get(){return "(" + to_string(x) + "," + to_string(y) + "," + key + ")";}
         void set(int x, int y, char keys, char operationMode);
-
+        
         int getx(){return x;}
         int gety(){return y;}
         char getkey(){return key;}
@@ -160,18 +160,17 @@ Node::Node(int degree, bool isLeaf){
 }
 
 void Node::traverse(){
-    int i = 0;
-    for(i = 0; i < size; i++){
-        if(leaf == false){
+
+    for(int i = 0; i < size; i++){
+        cout << data[i].get();
+        
+    }
+    if(leaf == false){
+        for(int i = 0; i<size+1;i++){
+            cout << endl;
             childs[i]->traverse();
         }
-        cout << "(" << data[i].getx() <<","<<data[i].gety() <<"," << data[i].getkey() << ")";
     }
-
-    if(leaf == false){
-        childs[i]->traverse();
-    }
-
 
 }
 
@@ -302,17 +301,17 @@ Tree::Tree(int degree, char operation){
     this->degree = degree;
 	operationMode = operation;
 }
-//NOT THIS FUNCTION
+
 void Tree::traverse(){
    if (root != NULL) root->traverse();
 }
 
-//NOT THIS FUNCTION
+
 Node* Tree::search(Data k){
     return (root == NULL)? NULL : root->search(k);
 }
 
-//NOT THIS FUNCTION
+
 void Tree::insert(int x, int y, char k){
 	Data newData(x, y, k, operationMode);
 	// If tree is empty 

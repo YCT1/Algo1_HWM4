@@ -36,7 +36,7 @@ int main (){
     mytree.insert(9,5,'Z');
 
     mytree.traverse();
-
+    cout << endl;
     
     return 0;
 }
