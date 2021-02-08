@@ -5,7 +5,7 @@ int main (){
     
 
     Tree mytree(3, 'z');
-
+    //Tree mytree(3);
     mytree.insert(56,34,'G');
 
     
