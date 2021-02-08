@@ -1,5 +1,6 @@
 
 #include <iostream>
+using namespace std;
 class Node{
 
     private:
@@ -33,6 +34,39 @@ Node::Node(int degree, bool isLeaf){
 
 }
 
+void Node::traverse(){
+    int i = 0;
+    for(i = 0; i < size; i++){
+        if(leaf == false){
+            childs[i]->traverse();
+        }
+        cout << " " << keys[i];
+    }
+
+    if(leaf == false){
+        childs[i]->traverse();
+    }
+
+}
+
+Node* Node::search(char k){
+    int  i = 0;
+    while (i < degree && k > keys[i]){
+        i++;
+    }
+
+    if(keys[i] == k){
+        return this;
+    }
+
+    if(leaf == true){
+        return NULL;
+    }
+
+    return childs[i]->search(k);
+
+}
+
 class Tree{
     private:
         Node *root; //root of node (pointer)
@@ -63,4 +97,5 @@ Node* Tree::search(char k){
     }else{
         root->search(k);
     }
+    return NULL;
 }
