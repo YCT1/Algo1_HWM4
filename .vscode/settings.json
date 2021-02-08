@@ -3,6 +3,7 @@
         "iostream": "cpp",
         "system_error": "cpp",
         "typeinfo": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "*.tcc": "cpp"
     }
 }
