@@ -157,8 +157,8 @@ class Node{
         void remove(Data k);
         void removeFromLeaf(int idx);
         void removeFromNonLeaf(int idx);
-        int getPred(int idx); 
-        int getSucc(int idx); 
+        Data getPred(int idx); 
+        Data getSucc(int idx); 
         void fill(int idx); 
         void borrowFromPrev(int idx); 
         void borrowFromNext(int idx); 
@@ -359,17 +359,17 @@ void Node::removeFromLeaf(int idx){
 }
 
 void Node::removeFromNonLeaf(int idx){
-     int k = keys[idx]; 
+     Data k = data[idx]; 
   
     // If the child that precedes k (C[idx]) has atleast t keys, 
     // find the predecessor 'pred' of k in the subtree rooted at 
     // C[idx]. Replace k by pred. Recursively delete pred 
     // in C[idx] 
-    if (C[idx]->n >= t) 
+    if (childs[idx]->size >= degree) 
     { 
-        int pred = getPred(idx); 
-        keys[idx] = pred; 
-        C[idx]->remove(pred); 
+        Data pred = getPred(idx); 
+        data[idx] = pred; 
+        childs[idx]->remove(pred); 
     } 
   
     // If the child C[idx] has less that t keys, examine C[idx+1]. 
@@ -377,11 +377,11 @@ void Node::removeFromNonLeaf(int idx){
     // the subtree rooted at C[idx+1] 
     // Replace k by succ 
     // Recursively delete succ in C[idx+1] 
-    else if  (C[idx+1]->n >= t) 
+    else if  (childs[idx+1]->size >= degree) 
     { 
-        int succ = getSucc(idx); 
-        keys[idx] = succ; 
-        C[idx+1]->remove(succ); 
+        Data succ = getSucc(idx); 
+        data[idx] = succ; 
+        childs[idx+1]->remove(succ); 
     } 
   
     // If both C[idx] and C[idx+1] has less that t keys,merge k and all of C[idx+1] 
@@ -391,8 +391,159 @@ void Node::removeFromNonLeaf(int idx){
     else
     { 
         merge(idx); 
-        C[idx]->remove(k); 
+        childs[idx]->remove(k); 
     } 
+    return; 
+}
+
+Data Node::getPred(int idx){
+    // Keep moving to the right most node until we reach a leaf 
+    Node *cur=childs[idx]; 
+    while (!cur->leaf){ 
+        cur = cur->childs[cur->size];
+    } 
+  
+    // Return the last key of the leaf 
+    return cur->data[cur->size-1]; 
+}
+Data Node::getSucc(int idx){
+  
+    // Keep moving the left most node starting from C[idx+1] until we reach a leaf 
+    Node *cur = childs[idx+1]; 
+    while (!cur->leaf) 
+        cur = cur->childs[0]; 
+  
+    // Return the first key of the leaf 
+    return cur->data[0]; 
+
+}
+void Node::fill(int idx){
+    // If the previous child(C[idx-1]) has more than t-1 keys, borrow a key 
+    // from that child 
+    if (idx!=0 && childs[idx-1]->size>=degree) 
+        borrowFromPrev(idx); 
+  
+    // If the next child(C[idx+1]) has more than t-1 keys, borrow a key 
+    // from that child 
+    else if (idx!=size && childs[idx+1]->size>=degree) 
+        borrowFromNext(idx); 
+  
+    // Merge C[idx] with its sibling 
+    // If C[idx] is the last child, merge it with with its previous sibling 
+    // Otherwise merge it with its next sibling 
+    else
+    { 
+        if (idx != size) 
+            merge(idx); 
+        else
+            merge(idx-1); 
+    } 
+    return; 
+}
+
+void Node::borrowFromPrev(int idx){
+    Node *child=childs[idx]; 
+    Node *sibling=childs[idx-1]; 
+  
+    // The last key from C[idx-1] goes up to the parent and key[idx-1] 
+    // from parent is inserted as the first key in C[idx]. Thus, the  loses 
+    // sibling one key and child gains one key 
+  
+    // Moving all key in C[idx] one step ahead 
+    for (int i=child->size-1; i>=0; --i) 
+        child->data[i+1] = child->data[i]; 
+  
+    // If C[idx] is not a leaf, move all its child pointers one step ahead 
+    if (!child->leaf) 
+    { 
+        for(int i=child->size; i>=0; --i) 
+            child->childs[i+1] = child->childs[i]; 
+    } 
+  
+    // Setting child's first key equal to keys[idx-1] from the current node 
+    child->data[0] = data[idx-1]; 
+  
+    // Moving sibling's last child as C[idx]'s first child 
+    if(!child->leaf) 
+        child->childs[0] = sibling->childs[sibling->size]; 
+  
+    // Moving the key from the sibling to the parent 
+    // This reduces the number of keys in the sibling 
+    data[idx-1] = sibling->data[sibling->size-1]; 
+  
+    child->size += 1; 
+    sibling->size -= 1; 
+  
+    return; 
+}
+void Node::borrowFromNext(int idx){
+    Node *child=childs[idx]; 
+    Node *sibling=childs[idx+1]; 
+  
+    // keys[idx] is inserted as the last key in C[idx] 
+    child->data[(child->size)] = data[idx]; 
+  
+    // Sibling's first child is inserted as the last child 
+    // into C[idx] 
+    if (!(child->leaf)) 
+        child->childs[(child->size)+1] = sibling->childs[0]; 
+  
+    //The first key from sibling is inserted into keys[idx] 
+    data[idx] = sibling->data[0]; 
+  
+    // Moving all keys in sibling one step behind 
+    for (int i=1; i<sibling->size; ++i) 
+        sibling->data[i-1] = sibling->data[i]; 
+  
+    // Moving the child pointers one step behind 
+    if (!sibling->leaf) 
+    { 
+        for(int i=1; i<=sibling->size; ++i) 
+            sibling->childs[i-1] = sibling->childs[i]; 
+    } 
+  
+    // Increasing and decreasing the key count of C[idx] and C[idx+1] 
+    // respectively 
+    child->size += 1; 
+    sibling->size -= 1; 
+  
+    return; 
+}
+void Node::merge(int idx){
+    Node *child = childs[idx]; 
+    Node *sibling = childs[idx+1]; 
+  
+    // Pulling a key from the current node and inserting it into (t-1)th 
+    // position of C[idx] 
+    child->data[degree-1] = data[idx]; 
+  
+    // Copying the keys from C[idx+1] to C[idx] at the end 
+    for (int i=0; i<sibling->size; ++i) 
+        child->data[i+degree] = sibling->data[i]; 
+  
+    // Copying the child pointers from C[idx+1] to C[idx] 
+    if (!child->leaf) 
+    { 
+        for(int i=0; i<=sibling->size; ++i) 
+            child->childs[i+degree] = sibling->childs[i]; 
+    } 
+  
+    // Moving all keys after idx in the current node one step before - 
+    // to fill the gap created by moving keys[idx] to C[idx] 
+    for (int i=idx+1; i<size; ++i) 
+        data[i-1] = data[i]; 
+  
+    // Moving the child pointers after (idx+1) in the current node one 
+    // step before 
+    for (int i=idx+2; i<=size; ++i) 
+        childs[i-1] = childs[i]; 
+  
+    // Updating the key count of child and the current node 
+    child->size += sibling->size+1; 
+    size--; 
+  
+    // Freeing the memory occupied by sibling 
+    delete(sibling); 
     return; 
 }
 class Tree{
