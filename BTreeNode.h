@@ -152,6 +152,19 @@ class Node{
 
         void traverse(); //Traverse function with pre-fix printing
         Node *search(Data k); //Returns the adress of node with desired data in it
+
+        //For deletion part, Allah yolumuzu açık etsin
+        void remove(Data k);
+        void removeFromLeaf(int idx);
+        void removeFromNonLeaf(int idx);
+        int getPred(int idx); 
+        int getSucc(int idx); 
+        void fill(int idx); 
+        void borrowFromPrev(int idx); 
+        void borrowFromNext(int idx); 
+        void merge(int idx);
+        int findData(Data k);
+
 friend class Tree;
 };
 
@@ -276,6 +289,112 @@ void Node::splitChild(int i, Node *y){
 
 }
 
+//Deletion functions for Node Class
+int Node::findData(Data k){
+ int idx=0; 
+    while (idx<size && data[idx] < k){
+        ++idx; 
+    } 
+    return idx;
+    
+}
+
+void Node::remove(Data k){
+    int idx = findData(k); 
+    
+        // The key to be removed is present in this node 
+        if (idx < size && data[idx] == k) 
+        { 
+    
+            // If the node is a leaf node - removeFromLeaf is called 
+            // Otherwise, removeFromNonLeaf function is called 
+            if (leaf) 
+                removeFromLeaf(idx); 
+            else
+                removeFromNonLeaf(idx); 
+        } 
+        else
+        { 
+    
+            // If this node is a leaf node, then the key is not present in tree 
+            if (leaf) 
+            { 
+                cout << "The key "<< k.get() <<" is does not exist in the tree\n"; 
+                return; 
+            } 
+    
+            // The key to be removed is present in the sub-tree rooted with this node 
+            // The flag indicates whether the key is present in the sub-tree rooted 
+            // with the last child of this node 
+            bool flag = ( (idx==size)? true : false ); 
+    
+            // If the child where the key is supposed to exist has less that t keys, 
+            // we fill that child 
+            if (childs[idx]->size < degree){ 
+                fill(idx);
+            } 
+    
+            // If the last child has been merged, it must have merged with the previous 
+            // child and so we recurse on the (idx-1)th child. Else, we recurse on the 
+            // (idx)th child which now has atleast t keys 
+            if (flag && idx > size){
+                childs[idx-1]->remove(k); 
+            } 
+            else{
+                childs[idx]->remove(k);
+            } 
+        } 
+    return; 
+    
+}
+void Node::removeFromLeaf(int idx){
+    // Move all the keys after the idx-th pos one place backward 
+    for (int i=idx+1; i<size; ++i){ 
+        data[i-1] = data[i];
+    } 
+    // Reduce the count of keys 
+    size--; 
+    return; 
+
+}
+
+void Node::removeFromNonLeaf(int idx){
+     int k = keys[idx]; 
+  
+    // If the child that precedes k (C[idx]) has atleast t keys, 
+    // find the predecessor 'pred' of k in the subtree rooted at 
+    // C[idx]. Replace k by pred. Recursively delete pred 
+    // in C[idx] 
+    if (C[idx]->n >= t) 
+    { 
+        int pred = getPred(idx); 
+        keys[idx] = pred; 
+        C[idx]->remove(pred); 
+    } 
+  
+    // If the child C[idx] has less that t keys, examine C[idx+1]. 
+    // If C[idx+1] has atleast t keys, find the successor 'succ' of k in 
+    // the subtree rooted at C[idx+1] 
+    // Replace k by succ 
+    // Recursively delete succ in C[idx+1] 
+    else if  (C[idx+1]->n >= t) 
+    { 
+        int succ = getSucc(idx); 
+        keys[idx] = succ; 
+        C[idx+1]->remove(succ); 
+    } 
+  
+    // If both C[idx] and C[idx+1] has less that t keys,merge k and all of C[idx+1] 
+    // into C[idx] 
+    // Now C[idx] contains 2t-1 keys 
+    // Free C[idx+1] and recursively delete k from C[idx] 
+    else
+    { 
+        merge(idx); 
+        C[idx]->remove(k); 
+    } 
+    return; 
+}
 class Tree{
     private:
         Node *root; //root of node (pointer)
@@ -288,6 +407,7 @@ class Tree{
         void traverse(); //Tree traverse function
         Node* search(Data k); //Search function
         void insert(int x, int y, char k); //Insert function
+        void remove(Data k);
 
 };
 
