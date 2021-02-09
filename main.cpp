@@ -36,7 +36,14 @@ int main (){
     mytree.insert(9,5,'Z');
 
     mytree.traverse();
-    cout << endl;
+    cout << endl << endl;
+    cout << "**----------------------------**" << endl << endl;
+
+    char removeData = 'G';
+    Data removeObject(0,0,removeData,mytree.getOperationMode());
+    mytree.remove(removeObject);
+
+    mytree.traverse();
     
     return 0;
 }
