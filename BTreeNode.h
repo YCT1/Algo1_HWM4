@@ -559,6 +559,7 @@ class Tree{
         Node* search(Data k); //Search function
         void insert(int x, int y, char k); //Insert function
         void remove(Data k);
+        char getOperationMode(){return operationMode;}
 
 };
 
@@ -619,4 +620,31 @@ void Tree::insert(int x, int y, char k){
 			root->insertNonFull(newData);
         } 
 	} 
+}
+
+//Tree class deletion function
+void Tree::remove(Data k){
+    if (!root) 
+    { 
+        cout << "The tree is empty\n"; 
+        return; 
+    } 
+  
+    // Call the remove function for root 
+    root->remove(k); 
+  
+    // If the root node has 0 keys, make its first child as the new root 
+    //  if it has a child, otherwise set root as NULL 
+    if (root->size==0) 
+    { 
+        Node *tmp = root; 
+        if (root->leaf) 
+            root = NULL; 
+        else
+            root = root->childs[0]; 
+  
+        // Free the old root 
+        delete tmp; 
+    } 
+    return; 
 }
