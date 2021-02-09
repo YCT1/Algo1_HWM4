@@ -4,6 +4,9 @@
         "system_error": "cpp",
         "typeinfo": "cpp",
         "ostream": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "functional": "cpp"
     }
 }
