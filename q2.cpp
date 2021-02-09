@@ -676,9 +676,12 @@ int main (){
         myTree.insert(x,y,z);
     }
 
-    char userCharDeletionInput;
-    int userIntDeletionInput;
-    Data deletionData;
+    //For deletion part
+    char userCharDeletionInput; //For char data
+    int userIntDeletionInput; //For Integer data
+    Data deletionData; //Data object
+    
+    //In this if structure, according to operaion mode, it will create data object and send to remove function
     if(type == 'z'){
         cin >> userCharDeletionInput;
         deletionData.set(0,0,userCharDeletionInput,myTree.getOperationMode());

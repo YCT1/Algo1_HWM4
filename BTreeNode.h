@@ -153,17 +153,17 @@ class Node{
         void traverse(); //Traverse function with pre-fix printing
         Node *search(Data k); //Returns the adress of node with desired data in it
 
-        //For deletion part, Allah yolumuzu açık etsin
-        void remove(Data k);
-        void removeFromLeaf(int idx);
-        void removeFromNonLeaf(int idx);
-        Data getPred(int idx); 
-        Data getSucc(int idx); 
-        void fill(int idx); 
-        void borrowFromPrev(int idx); 
-        void borrowFromNext(int idx); 
-        void merge(int idx);
-        int findData(Data k);
+        //For deletion part
+        void remove(Data k); //Main remove funtion it gets Data object and start the process of deletion
+        void removeFromLeaf(int idx); //This function will remove the leaf
+        void removeFromNonLeaf(int idx); //This function will remove nodes that is not leaf
+        Data getPred(int idx);  //Get Previous Data in the Node
+        Data getSucc(int idx);  //Gets Next Data in the Node
+        void fill(int idx);  //Fill function after remove operation has been done in the node
+        void borrowFromPrev(int idx); //barrow previous data in desired index
+        void borrowFromNext(int idx); //barrow next data in desired index
+        void merge(int idx); //Merging nececary nodes after spliting during the deletion processs
+        int findData(Data k); //Find the data and return the index
 
 friend class Tree;
 };
@@ -305,39 +305,29 @@ void Node::remove(Data k){
         // The key to be removed is present in this node 
         if (idx < size && data[idx] == k) 
         { 
-    
-            // If the node is a leaf node - removeFromLeaf is called 
-            // Otherwise, removeFromNonLeaf function is called 
-            if (leaf) 
-                removeFromLeaf(idx); 
-            else
+            if (leaf){ 
+                removeFromLeaf(idx);
+            } 
+            else{
                 removeFromNonLeaf(idx); 
-        } 
-        else
-        { 
+            }
+        }else{ 
     
-            // If this node is a leaf node, then the key is not present in tree 
+            // If this is leaf, we can understand that we reach end of the key and we can print 
             if (leaf) 
             { 
-                cout << "The key "<< k.get() <<" is does not exist in the tree\n"; 
+                cout << "The data you are looking for to remove in the does not exsist in the tree" << endl; 
                 return; 
             } 
     
-            // The key to be removed is present in the sub-tree rooted with this node 
-            // The flag indicates whether the key is present in the sub-tree rooted 
-            // with the last child of this node 
-            bool flag = ( (idx==size)? true : false ); 
-    
-            // If the child where the key is supposed to exist has less that t keys, 
-            // we fill that child 
+            // Ifthe data exsist in the tree this boolean variable will be true
+            bool isExsist = ( (idx==size)? true : false ); 
+
             if (childs[idx]->size < degree){ 
                 fill(idx);
             } 
-    
-            // If the last child has been merged, it must have merged with the previous 
-            // child and so we recurse on the (idx-1)th child. Else, we recurse on the 
-            // (idx)th child which now has atleast t keys 
-            if (flag && idx > size){
+
+            if (isExsist && idx > size){
                 childs[idx-1]->remove(k); 
             } 
             else{
@@ -348,48 +338,29 @@ void Node::remove(Data k){
     
 }
 void Node::removeFromLeaf(int idx){
-    // Move all the keys after the idx-th pos one place backward 
     for (int i=idx+1; i<size; ++i){ 
         data[i-1] = data[i];
     } 
-    // Reduce the count of keys 
     size--; 
     return; 
 
 }
 
 void Node::removeFromNonLeaf(int idx){
-     Data k = data[idx]; 
-  
-    // If the child that precedes k (C[idx]) has atleast t keys, 
-    // find the predecessor 'pred' of k in the subtree rooted at 
-    // C[idx]. Replace k by pred. Recursively delete pred 
-    // in C[idx] 
+     
+    Data k = data[idx];
+
     if (childs[idx]->size >= degree) 
     { 
         Data pred = getPred(idx); 
         data[idx] = pred; 
         childs[idx]->remove(pred); 
-    } 
-  
-    // If the child C[idx] has less that t keys, examine C[idx+1]. 
-    // If C[idx+1] has atleast t keys, find the successor 'succ' of k in 
-    // the subtree rooted at C[idx+1] 
-    // Replace k by succ 
-    // Recursively delete succ in C[idx+1] 
-    else if  (childs[idx+1]->size >= degree) 
+    }else if  (childs[idx+1]->size >= degree) 
     { 
         Data succ = getSucc(idx); 
         data[idx] = succ; 
         childs[idx+1]->remove(succ); 
-    } 
-  
-    // If both C[idx] and C[idx+1] has less that t keys,merge k and all of C[idx+1] 
-    // into C[idx] 
-    // Now C[idx] contains 2t-1 keys 
-    // Free C[idx+1] and recursively delete k from C[idx] 
-    else
-    { 
+    }else{ 
         merge(idx); 
         childs[idx]->remove(k); 
     } 
@@ -397,46 +368,33 @@ void Node::removeFromNonLeaf(int idx){
 }
 
 Data Node::getPred(int idx){
-    // Keep moving to the right most node until we reach a leaf 
     Node *cur=childs[idx]; 
     while (!cur->leaf){ 
         cur = cur->childs[cur->size];
     } 
-  
-    // Return the last key of the leaf 
     return cur->data[cur->size-1]; 
 }
 Data Node::getSucc(int idx){
-  
-    // Keep moving the left most node starting from C[idx+1] until we reach a leaf 
+
     Node *cur = childs[idx+1]; 
-    while (!cur->leaf) 
+    while (!cur->leaf){ 
         cur = cur->childs[0]; 
-  
-    // Return the first key of the leaf 
+    }
     return cur->data[0]; 
 
 }
 void Node::fill(int idx){
-    // If the previous child(C[idx-1]) has more than t-1 keys, borrow a key 
-    // from that child 
-    if (idx!=0 && childs[idx-1]->size>=degree) 
+    if (idx!=0 && childs[idx-1]->size>=degree){ 
         borrowFromPrev(idx); 
-  
-    // If the next child(C[idx+1]) has more than t-1 keys, borrow a key 
-    // from that child 
-    else if (idx!=size && childs[idx+1]->size>=degree) 
+    }else if (idx!=size && childs[idx+1]->size>=degree){ 
         borrowFromNext(idx); 
-  
-    // Merge C[idx] with its sibling 
-    // If C[idx] is the last child, merge it with with its previous sibling 
-    // Otherwise merge it with its next sibling 
-    else
-    { 
-        if (idx != size) 
-            merge(idx); 
-        else
+    }else{ 
+        if (idx != size){
+            merge(idx);
+        } 
+        else{
             merge(idx-1); 
+        }
     } 
     return; 
 }
@@ -444,31 +402,26 @@ void Node::fill(int idx){
 void Node::borrowFromPrev(int idx){
     Node *child=childs[idx]; 
     Node *sibling=childs[idx-1]; 
+
+    for (int i=child->size-1; i>=0; --i){ 
+        child->data[i+1] = child->data[i];
+    } 
   
-    // The last key from C[idx-1] goes up to the parent and key[idx-1] 
-    // from parent is inserted as the first key in C[idx]. Thus, the  loses 
-    // sibling one key and child gains one key 
-  
-    // Moving all key in C[idx] one step ahead 
-    for (int i=child->size-1; i>=0; --i) 
-        child->data[i+1] = child->data[i]; 
-  
-    // If C[idx] is not a leaf, move all its child pointers one step ahead 
+
     if (!child->leaf) 
     { 
         for(int i=child->size; i>=0; --i) 
             child->childs[i+1] = child->childs[i]; 
     } 
   
-    // Setting child's first key equal to keys[idx-1] from the current node 
     child->data[0] = data[idx-1]; 
   
-    // Moving sibling's last child as C[idx]'s first child 
-    if(!child->leaf) 
+
+    if(!child->leaf){ 
         child->childs[0] = sibling->childs[sibling->size]; 
+    }
   
-    // Moving the key from the sibling to the parent 
-    // This reduces the number of keys in the sibling 
+
     data[idx-1] = sibling->data[sibling->size-1]; 
   
     child->size += 1; 
@@ -479,31 +432,27 @@ void Node::borrowFromPrev(int idx){
 void Node::borrowFromNext(int idx){
     Node *child=childs[idx]; 
     Node *sibling=childs[idx+1]; 
-  
-    // keys[idx] is inserted as the last key in C[idx] 
+
     child->data[(child->size)] = data[idx]; 
-  
-    // Sibling's first child is inserted as the last child 
-    // into C[idx] 
-    if (!(child->leaf)) 
+
+    if (!(child->leaf)){ 
         child->childs[(child->size)+1] = sibling->childs[0]; 
-  
-    //The first key from sibling is inserted into keys[idx] 
+    }
+
     data[idx] = sibling->data[0]; 
-  
-    // Moving all keys in sibling one step behind 
-    for (int i=1; i<sibling->size; ++i) 
-        sibling->data[i-1] = sibling->data[i]; 
-  
-    // Moving the child pointers one step behind 
+ 
+    for (int i=1; i<sibling->size; ++i){ 
+        sibling->data[i-1] = sibling->data[i];
+    } 
+
     if (!sibling->leaf) 
     { 
-        for(int i=1; i<=sibling->size; ++i) 
+        for(int i=1; i<=sibling->size; ++i){ 
             sibling->childs[i-1] = sibling->childs[i]; 
+        }
     } 
   
-    // Increasing and decreasing the key count of C[idx] and C[idx+1] 
-    // respectively 
+    // Increasing and decreasing the data count of for child and its sibling 
     child->size += 1; 
     sibling->size -= 1; 
   
@@ -512,37 +461,32 @@ void Node::borrowFromNext(int idx){
 void Node::merge(int idx){
     Node *child = childs[idx]; 
     Node *sibling = childs[idx+1]; 
-  
-    // Pulling a key from the current node and inserting it into (t-1)th 
-    // position of C[idx] 
+
     child->data[degree-1] = data[idx]; 
-  
-    // Copying the keys from C[idx+1] to C[idx] at the end 
-    for (int i=0; i<sibling->size; ++i) 
+
+    for (int i=0; i<sibling->size; ++i){ 
         child->data[i+degree] = sibling->data[i]; 
-  
-    // Copying the child pointers from C[idx+1] to C[idx] 
+    }
+
     if (!child->leaf) 
     { 
         for(int i=0; i<=sibling->size; ++i) 
             child->childs[i+degree] = sibling->childs[i]; 
     } 
+
+    for (int i=idx+1; i<size; ++i){ 
+        data[i-1] = data[i];
+    } 
   
-    // Moving all keys after idx in the current node one step before - 
-    // to fill the gap created by moving keys[idx] to C[idx] 
-    for (int i=idx+1; i<size; ++i) 
-        data[i-1] = data[i]; 
-  
-    // Moving the child pointers after (idx+1) in the current node one 
-    // step before 
-    for (int i=idx+2; i<=size; ++i) 
+
+    for (int i=idx+2; i<=size; ++i){ 
         childs[i-1] = childs[i]; 
-  
-    // Updating the key count of child and the current node 
+    }
+
     child->size += sibling->size+1; 
     size--; 
   
-    // Freeing the memory occupied by sibling 
+    // Free the memory for leak
     delete(sibling); 
     return; 
 }
@@ -630,20 +574,20 @@ void Tree::remove(Data k){
         return; 
     } 
   
-    // Call the remove function for root 
+    // Start recursive call
     root->remove(k); 
-  
-    // If the root node has 0 keys, make its first child as the new root 
-    //  if it has a child, otherwise set root as NULL 
+
     if (root->size==0) 
     { 
         Node *tmp = root; 
-        if (root->leaf) 
-            root = NULL; 
-        else
-            root = root->childs[0]; 
+        if (root->leaf){ 
+            root = NULL;
+        } 
+        else{
+            root = root->childs[0];
+        } 
   
-        // Free the old root 
+        // Free the memory and delete tmp
         delete tmp; 
     } 
     return; 
